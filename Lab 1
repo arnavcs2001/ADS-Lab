@@ -1,0 +1,186 @@
+// ADS
+// Lab Program 3
+/* 
+Given a boolean 2D matrix, find the number of islands.
+A group of connected 1s forms an island. For example, the below matrix contains 5
+islands
+{1, 1, 0, 0, 0},
+{0, 1, 0, 0, 1},
+{1, 0, 0, 1, 1},
+{0, 0, 0, 0, 0},
+{1, 0, 1, 0, 1}
+A cell in the 2D matrix can be connected to 8 neighbours.
+Use disjoint sets to implement the above scenario.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
+#include <conio.h>
+#include <time.h>
+#include <stdbool.h>
+#include <limits.h>
+
+void makeSet(int n,int parent[])
+{
+    int i;
+    // Initially, all elements are in their own set.
+    for(i = 0; i < n; i++)
+    {    
+        parent[i] = i;
+    }
+}    
+
+// Finds the representative of the set that x is an element of
+int find(int x,int parent[])
+{
+    if(parent[x] != x)
+    {
+        parent[x]=find(parent[x],parent);
+    }
+    return parent[x];
+}
+  
+// Unites the set that includes x and the set that includes y
+void Union(int x, int y, int parent[], int rank[])
+{
+    // Find the representatives(or the root nodes) for x an y
+    int xRoot = find(x,parent);
+    int yRoot = find(y,parent);
+  
+    // Elements are in the same set, no need to unite anything.
+    if(xRoot == yRoot)
+    {
+        return;
+    }
+  
+    // If x's rank is less than y's rank Then move x under y so that depth of tree remains less
+    if(rank[xRoot] < rank[yRoot])
+    {
+        parent[xRoot] = yRoot;
+    }
+  
+    // Else if y's rank is less than x's rank Then move y under x so that depth of tree remains less
+    else if(rank[yRoot] < rank[xRoot])
+    {
+        parent[yRoot] = xRoot;
+    }
+  
+    else // Else if their ranks are the same
+    {
+        // Then move y under x (doesn't matter which one goes where)
+        parent[yRoot] = xRoot;
+        // And increment the result tree's rank by 1
+        rank[xRoot] = rank[xRoot] + 1;
+    }
+}
+
+int countIslands(int A[15][15],int a,int b,int n,int parent[], int rank[])
+{
+    int j,k;
+   //The following loop checks for its neighbours and unites the indexes if both are 1.
+    for(j = 0; j < a; j++)
+    {
+        for(k = 0; k < b; k++)
+        {
+            // If cell is 0, nothing to do
+            if(A[j][k] == 0)
+            {
+                continue;
+            }
+            // Check all 8 neighbours and do a Union with neighbour's set if neighbour is also 1
+            if(j + 1 < a && A[j + 1][k] == 1)
+            {
+                Union(j * (b) + k, (j + 1) * (b) + k, parent, rank);
+            }
+            if(j - 1 >= 0 && A[j - 1][k] == 1)
+            {
+                Union(j * (b) + k, (j - 1) * (b) + k, parent, rank);
+            }
+            if(k + 1 < b && A[j][k + 1] == 1)
+            {
+                Union(j * (b) + k, (j) * (b) + k + 1, parent, rank);
+            }
+            if(k - 1 >= 0 && A[j][k - 1] == 1)
+            {
+                Union(j * (b) + k,(j) * (b) + k - 1, parent, rank);
+            }
+            if(j + 1 < a && k + 1 < b && A[j + 1][k + 1] == 1)
+            {
+                Union(j * (b) + k, (j + 1) * (b) + k + 1, parent, rank);
+            }    
+            if(j + 1 < a && k - 1 >= 0 && A[j + 1][k - 1] == 1)
+            {
+                Union(j * b + k, (j + 1) * (b) + k - 1, parent, rank);
+            }
+            if(j - 1 >= 0 && k + 1 < b && A[j - 1][k + 1] == 1)
+            {
+                Union(j * b + k, (j - 1) * b + k + 1, parent, rank);
+            }
+            if(j - 1 >= 0 && k - 1 >= 0 && A[j - 1][k - 1] == 1)
+            {
+                Union(j * b + k, (j - 1) * b + k - 1, parent, rank);
+            }
+        }
+    }
+  
+    // Array to note down frequency of each set
+    int c[n],i;
+    for(i=0;i<n;i++)
+    {
+        c[i] = 0;
+    }
+    int numberOfIslands = 0;
+    for(j = 0; j < a; j++)
+    {
+        for(k = 0; k < b; k++)
+        {
+            if(A[j][k] == 1)
+            {
+                int x = find((j * b) + k, parent);
+                // If frequency of set is 0, increment numberOfIslands
+                if(c[x] == 0)
+                {
+                    numberOfIslands = numberOfIslands + 1;
+                    c[x] = c[x] + 1;;
+                }
+                else
+                {
+                    c[x] = c[x] + 1;;
+                }
+            }
+        }
+    }
+    return numberOfIslands;
+}
+
+int main() 
+{
+    int a,b,i,j,n,z,l;
+    printf("Enter the number of rows: ");
+    scanf("%d",&a);
+    printf("\nEnter the number of columns: ");
+    scanf("%d",&b);
+    n = a*b;
+    int parent[n];
+    int rank[n];
+    for(l = 0; l < n; l++)
+    {    
+        rank[l] = 0;
+    }
+    makeSet(n,parent);
+    int A[15][15]; 
+    printf("\nPlease enter the adjacency matrix:\n");
+    for(i=0;i<a;i++)
+    {
+        for(j=0;j<b;j++)
+        {
+            scanf("%d",&A[i][j]);
+        }
+    } 
+    z = countIslands(A,a,b,n,parent,rank);
+    printf("\nThe number of islands are: %d\n",z); 
+    return 0;
+}    
