@@ -1,0 +1,145 @@
+// ADS
+// Program to implement memory efficient Doubly Linked List (XOR Linked List)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
+#include <conio.h>
+#include <time.h>
+#include <stdbool.h>
+#include <limits.h>
+#include <inttypes.h>
+
+struct Node
+{
+    int data;
+    struct Node* npx;
+};
+ 
+// Returns XORed value of the node addresses
+struct Node* XOR(struct Node *a, struct Node *b)
+{
+    return ((struct Node*)((uintptr_t)(a) ^ (uintptr_t)(b))); /* uintptr_t is an unsigned integer type that is
+                                                                  capable of storing a data pointer */
+}
+ 
+// Insert a node at the beginning of the XORed linked list and makes the newly inserted node as head
+struct Node *insert(struct Node *head, int data)
+{
+    // Allocate memory for new node
+    struct Node *node = (struct Node *)malloc(sizeof(struct Node));
+    node->data = data;
+   
+    // Since new node is being inserted at the beginning, npx of new node will always be XOR of current head and NULL
+    node->npx = head;
+ 
+    // If linked list is not empty, then npx of current head node will be XOR of new node and node next to current head
+    if(head != NULL)
+    {
+        /* When we insert a new node at the beginning, npx of the current head must be changed to XOR of
+           the new node and node next to the current head. */
+        head->npx = XOR(node,head->npx);
+    }
+ 
+    // Change head
+    head = node;
+    return head;
+}
+ 
+// Prints contents of doubly linked list in forward direction
+void printList(struct Node *head)
+{
+    struct Node *curr = head;
+    struct Node *prev = NULL;
+    struct Node *next;
+ 
+    printf("Following are the nodes of Linked List: \n");
+ 
+    while(curr != NULL)
+    {
+        // Print current node
+        printf("%d ",curr->data);
+ 
+        // Get address of next node:
+        // curr->npx is next^prev, so curr->npx^prev will be next^prev^prev which is next
+        next = XOR(prev,curr->npx);
+ 
+        // Update prev and curr for next iteration
+        prev = curr;
+        curr = next;
+    }
+}
+
+// Function to delete the last node present in the XOR Linked List
+struct Node* delEnd(struct Node* head)
+{
+    if(head == NULL)
+    {
+        printf("List is empty \n");
+    }
+    else
+    {
+        struct Node* curr = head;
+        struct Node* prev = NULL;
+        struct Node* next;
+ 
+        // Traverse XOR linked list
+        while(XOR(curr->npx, prev) != NULL)
+        {
+            next = XOR(prev,curr->npx);
+            prev = curr;
+            curr = next;
+        }
+        // If the Linked List contains more than 1 node
+        if(prev != NULL)
+        {
+            prev->npx = XOR(XOR(prev->npx, curr), NULL); /* For this case it can be viewed as traversing the linked list in the backward
+                                                            direction, so the formula becomes XOR(address of next node,current node->npx).
+                                                            Address of next node = XOR(prev->npx,curr) and current node->nxp = NULL, thus
+                                                            prev->npx = XOR(XOR(prev->npx, curr), NULL); */
+        }
+        else
+        {
+            head = NULL;
+        }
+       
+        free(curr); // Delete the last node from memory
+    }
+    return head;
+}
+ 
+int main()
+{
+    int var;
+    /* Create following Doubly Linked List:
+       head-->40<-->30<-->20<-->10 */
+    struct Node *head = NULL;
+    head = insert(head, 10);
+    head = insert(head, 20);
+    head = insert(head, 30);
+    head = insert(head, 40);
+ 
+    printf("Do you want to delete a node? \n");
+    printf("Please reply in a 1(Yes) or a 0(No) \n");
+    scanf("%d",&var);
+    if(var==1)
+    {
+        head = delEnd(head);
+        if(head == NULL) // If the list had a single node
+        {
+            printf("List is empty\n");
+        }
+        else
+        {
+            printList(head); // Print the list after deletion
+        }
+    }
+    else
+    {
+        printList(head); // Print the created list
+    }
+   
+    return 0;
+}
