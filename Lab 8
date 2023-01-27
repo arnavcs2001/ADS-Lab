@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <string.h>
+
+#define TABLE_SIZE 10
+
+struct Dictionary {
+    char key[100];
+    char value[100];
+};
+
+struct Dictionary table[TABLE_SIZE];
+
+unsigned int hash(char *key) {
+    unsigned int hash = 5381;
+    int c;
+
+    while ((c = *key++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash % TABLE_SIZE;
+}
+
+void insert(char *key, char *value) {
+    unsigned int index = hash(key);
+
+    strcpy(table[index].key, key);
+    strcpy(table[index].value, value);
+}
+
+char *lookup(char *key) {
+    unsigned int index = hash(key);
+
+    if (strcmp(table[index].key, key) == 0)
+        return table[index].value;
+
+    return NULL;
+}
+
+int main() {
+    insert("hello", "world");
+    printf("%s\n", lookup("hello")); // prints "world"
+
+    return 0;
+}
+
+
+
+
